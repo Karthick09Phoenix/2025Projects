@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <!-- Main container -->
+    <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
+
+        <h1 class="text-3xl font-semibold text-center text-blue-600 mb-8">Expense Calculator</h1>
+
+        <!-- Add Expense Form -->
+        <form action="{{ url_for('add_expense') }}" method="POST" class="space-y-6">
+            <div>
+                <label for="name" class="block text-lg font-medium text-gray-700">Expense Name:</label>
+                <input type="text" name="name" id="name" required
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div>
+                <label for="amount" class="block text-lg font-medium text-gray-700">Amount (₹):</label>
+                <input type="number" name="amount" id="amount" required
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div>
+                <label for="category" class="block text-lg font-medium text-gray-700">Category:</label>
+                <select name="category" id="category" required
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    {% for category in categories %}
+                        <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="date" class="block text-lg font-medium text-gray-700">Date:</label>
+                <input type="date" name="date" id="date" required
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+
+            <div class="flex justify-center mt-4">
+                <button type="submit"
+                    class="w-1/2 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    Add Expense
+                </button>
+            </div>
+        </form>
+
+        <!-- Filter Expenses -->
+        <div class="mt-10">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Filter Expenses</h2>
+            <form method="GET" class="space-y-6">
+                <div>
+                    <label for="category" class="block text-lg font-medium text-gray-700">Category:</label>
+                    <select name="category" id="category"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">All</option>
+                        {% for category in categories %}
+                            <option value="{{ category }}" {% if category == filter_category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="date" class="block text-lg font-medium text-gray-700">Date:</label>
+                    <input type="date" name="date" id="date" value="{{ filter_date }}"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div class="flex justify-center mt-4">
+                    <button type="submit"
+                        class="w-1/2 bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:outline-none">
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Expenses Display -->
+        <div class="mt-10">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Expenses</h2>
+            <div class="space-y-8">
+                {% for category, items in expenses.items() %}
+                    <div>
+                        <h3 class="text-xl font-bold text-blue-600">{{ category }}</h3>
+                        <ul class="space-y-4">
+                            {% for expense in items %}
+                                <li class="flex justify-between items-center bg-gray-50 p-4 rounded-lg shadow-sm">
+                                    <div>
+                                        <p class="text-lg text-gray-700">{{ expense.name }}</p>
+                                        <p class="text-sm text-gray-500">{{ expense.date }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-lg text-gray-800">₹{{ expense.amount }}</p>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('remove_expense', expense_index=loop.index0) }}">
+                                            <button class="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 focus:ring-2 focus:ring-red-500">
+                                                Remove
+                                            </button>
+                                        </a>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Total Expense and Summary -->
+        <div class="mt-10">
+            <h3 class="text-2xl font-semibold text-gray-800">Total Expense: ₹{{ total_expense }}</h3>
+            <h3 class="text-2xl font-semibold text-gray-800 mt-6">Monthly Expense Summary:</h3>
+            <ul class="space-y-2">
+                {% for category, total in summary.items() %}
+                    <li class="flex justify-between text-lg text-gray-800">
+                        <span>{{ category }}:</span>
+                        <span>₹{{ total }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Export Button -->
+        <div class="mt-10 text-center">
+            <a href="{{ url_for('export_to_csv') }}">
+                <button class="bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-500">
+                    Export to CSV
+                </button>
+            </a>
+        </div>
+
+    </div>
+
+</body>
+</html>
